@@ -31,7 +31,22 @@ export class ProductManagmentStack extends cdk.Stack {
         bucketName: `${this.stackName.toLocaleLowerCase()}-images`,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
         autoDeleteObjects: true,
+        blockPublicAccess: new s3.BlockPublicAccess({
+          blockPublicAcls: true,
+          blockPublicPolicy: false,
+          ignorePublicAcls: true,
+          restrictPublicBuckets: false, 
+        })
       },
+    );
+
+    productImagesBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:GetObject"],
+        resources: [`${productImagesBucket.bucketArn}/products/*`],
+        principals: [new iam.AnyPrincipal()],
+      }),
     );
 
     const createProductLambda = new NodejsFunction(

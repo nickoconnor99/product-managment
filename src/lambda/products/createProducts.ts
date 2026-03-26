@@ -1,12 +1,10 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Product } from "../../types/product";
 import { v4 as uuidv4 } from 'uuid';
-import { buffer } from "stream/consumers";
-import { stat } from "fs";
-import { error } from "console";
+import { ProductRecord } from "../../types/product";
 
 
 // Initialize AWS SDK clients
@@ -83,9 +81,35 @@ export const handler = async(event: APIGatewayProxyEventV2): Promise<APIGatewayP
      }
    }
 
+   const ProductRecord: ProductRecord = {
+    id: productId,
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    imageUrl,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+   }
+
+   try{
+      await docClient.send(
+         new PutCommand({
+            TableName: PRODUCTS_TABLE_NAME,
+            Item: ProductRecord
+         })
+      )
+      console.log('DynamoDB put successful, product record:', ProductRecord)
+   } catch (dbError:any) {
+      console.error('Error saving product to DynamoDB:', dbError)
+      return {
+         statusCode: 500,
+         body: JSON.stringify({message: 'Failed to save product', error: dbError.message})
+       }
+    }
+
  return {
-    statusCode: 200,
-    body: JSON.stringify({message: 'create product'})
+    statusCode: 201,
+    body: JSON.stringify({message: 'Product created successfully', product: ProductRecord})
  }
    } catch (error:any) {
     console.error('Error creating product:', error);
