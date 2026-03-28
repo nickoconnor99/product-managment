@@ -35,8 +35,8 @@ export class ProductManagmentStack extends cdk.Stack {
           blockPublicAcls: true,
           blockPublicPolicy: false,
           ignorePublicAcls: true,
-          restrictPublicBuckets: false, 
-        })
+          restrictPublicBuckets: false,
+        }),
       },
     );
 
